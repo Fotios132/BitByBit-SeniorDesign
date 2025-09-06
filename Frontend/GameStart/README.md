@@ -4,25 +4,19 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Get started
 
-1. Install dependencies
+1. Install dependencies after pulling frm rep
 
    ```bash
    npm install 
    ```
-OR to start the existing project 
-```back
-npm run android
-```
 
-2. Before starting the App, please run
-```bach
-npm install
-```
-4. Start the app
+2. Start the app
 
    ```bash
    npx expo start
    ```
+   ## OR
+   
    ```bash
    npm run android
    ```
