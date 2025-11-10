@@ -10,9 +10,54 @@ export default function SignInScreen({ onBack }: any) {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{[k:string]: string}>({}); // uses :string to only allow string keys
 
-  // Handle Submit for Login Button 
-  const handleSubmit = () => {
+    const validate = () => {
+    let valid = true;
+    let newErrors: { [k: string]: string } = {};
+
+    if(!firstName && isRegistering) {
+        newErrors.firstName = "First name is required";
+        valid = false;
+    } 
+
+    if(!lastName && isRegistering){
+        newErrors.lastName = "Last name is required";
+        valid = false;
+    }
+
+    // Email validation
+    if (!email) {
+      newErrors.email = "Email is required";
+      valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Please enter a valid email address";
+      valid = false;
+    }
+
+    // Password validation
+    if (!password) {
+      newErrors.password = "Password is required";
+      valid = false;
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
+// Handle Submit for Main Login Button
+   const LogInHandleSumbmit = () => {
+    if (validate()) {
+      // You can call your login API here
+      console.log("Logging in with:", { email, password });
+      router.push('/'); // Navigate back to Home Page
+    }
+  };
+  // Handle Submit for Register Button 
+  const registerHandleSubmit = () => {
     // Not sure About this part
     if (isRegistering) {
       console.log('Register:', { firstName, lastName, email, password });
@@ -27,6 +72,8 @@ export default function SignInScreen({ onBack }: any) {
   const handleSwitch = () => {
     setIsRegistering(!isRegistering);
   };
+
+ 
 
   // Titles and Button Titles
   let titleText = 'Welcome Back';
@@ -54,31 +101,35 @@ export default function SignInScreen({ onBack }: any) {
       {isRegistering && (
         <>
           <TextInput
-            style={styles.input}
+            style={[styles.input, errors.firstName && styles.errorInput]}
             placeholder="First Name"
             placeholderTextColor="#ccc"
             value={firstName}
             onChangeText={setFirstName}
           />
+            {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+
           <TextInput
-            style={styles.input}
+            style={[styles.input, errors.lastName && styles.errorInput]}
             placeholder="Last Name"
             placeholderTextColor="#ccc"
             value={lastName}
             onChangeText={setLastName}
           />
+            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
         </>
       )}
 
       {/* Email Input */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.email && styles.errorInput]}
         placeholder="Email"
         placeholderTextColor="#ccc"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
+       {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
       {/* Password Input */}
       <TextInput
@@ -89,18 +140,20 @@ export default function SignInScreen({ onBack }: any) {
         value={password}
         onChangeText={setPassword}
       />
+      {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
-      {/* Login Button */}
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+
+      {/* Register Button */}
+      <TouchableOpacity style={styles.button} onPress={LogInHandleSumbmit}>
         <Text style={styles.buttonText}>{buttonText}</Text>
       </TouchableOpacity>
 
-      {/* Login Button*/}
+      {/* "Already have an account? Login" Button */}
       <TouchableOpacity onPress={handleSwitch}>
         <Text style={styles.switchText}>{switchText}</Text>
       </TouchableOpacity>
 
-      {/* Switch Button back to Home*/}
+      {/* Main Login Button*/}
       <TouchableOpacity onPress={() => router.push('/')}> 
         <Text style={styles.backText}>← Back to Home</Text>
       </TouchableOpacity>
@@ -169,5 +222,12 @@ const styles = StyleSheet.create({
     color: '#ccc',
     marginTop: 10,
     fontSize: 14,
+  },
+  errorInput: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 8,
   },
 });
