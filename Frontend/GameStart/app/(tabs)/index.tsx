@@ -24,17 +24,21 @@ export default function App() {
           <Text style={styles.logo}>GameStart</Text>
           
           <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/signIn')}>
-            <Text style={styles.signInText}>Sign In</Text>
+        <Text style={styles.signInText}>Sign In</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cartButton}>
-            <Text style={styles.cartText}>Cart (0)</Text>
+        <Text style={styles.cartText}>Cart (0)</Text>
           </TouchableOpacity>
         </View>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search games, consoles, accessories..."
-          placeholderTextColor="#ccc"
-        />
+        <TouchableOpacity style={{width: '95%'}} onPress={() => router.push('/search')}>
+          <TextInput
+        style={styles.searchBar}
+        placeholder="Search games, consoles, accessories..."
+        placeholderTextColor="#ccc"
+        editable={false}
+        pointerEvents="none"
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Scrollable Content */}
@@ -104,7 +108,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   searchBar: {
-    width: '95%',
+    // width: '95%',
     backgroundColor: '#222',
     color: '#fff',
     borderRadius: 8,
