@@ -7,5 +7,7 @@ def hello(request):
 
 @csrf_exempt
 def login(request, user_identifier):
-    print(f"Logging in user: {user_identifier}")
+    username = user_identifier.split("~")[0]
+    password = user_identifier.split("~")[1]
+    print(f"Username: {username}, Password: {password}")
     return JsonResponse({"status": "success"})
