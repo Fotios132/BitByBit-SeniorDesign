@@ -1,228 +1,299 @@
-import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  StyleSheet,
+  View,
   Text,
   TextInput,
+  FlatList,
+  Image,
   TouchableOpacity,
-  View,
-} from "react-native";
-import CategoryBar, { Category } from "../../components/CategoryBar";
+  StyleSheet,
+  Dimensions,
+  ActivityIndicator,
+} from 'react-native';
+import { router } from 'expo-router';
+import { useCart } from '../../context/CartContext'; // 👈 adjust path
 
-/** ----- Hardcoded data ----- */
-type Product = {
-  id: string;
-  title: string;
+type StoreItem = {
+  id: number;
+  name: string;
   price: number;
-  imageUrl: string;
-  category: "Consoles" | "Accessories";
+  image: any;
+  type: "Games" | "Consoles" | "Accessories";
 };
 
-const consoles: Product[] = [
-  {
-    id: "c1",
-    title: "PlayStation 5",
-    price: 499.99,
-    imageUrl:
-      "https://www.billboard.com/wp-content/uploads/2023/07/Marvel-s-Spider-Man-2-Limited-Edition-cr-Sony-billboard-1548.png?w=942&h=628&crop=1",
-    category: "Consoles",
-  },
-  {
-    id: "c2",
-    title: "Xbox Series X",
-    price: 499.99,
-    imageUrl:
-      "https://assets.xboxservices.com/assets/59/10/5910d098-6cb4-459e-a3bf-10972df27ac7.jpg?n=Xbox-Wireless-Controller_Image-Hero_1084_Blue_1920x831_01.jpg",
-    category: "Consoles",
-  },
-];
-
-const accessories: Product[] = [
-  {
-    id: "a1",
-    title: "DualSense Controller",
-    price: 69.99,
-    imageUrl:
-      "https://images.unsplash.com/photo-1606813907291-76b3b302b5c8?q=80&w=1200&auto=format&fit=crop",
-    category: "Accessories",
-  },
-  {
-    id: "a2",
-    title: "Xbox Wireless Headset",
-    price: 99.99,
-    imageUrl:
-      "https://images.unsplash.com/photo-1610382991935-1cf7e2c1c3e9?q=80&w=1200&auto=format&fit=crop",
-    category: "Accessories",
-  },
-];
-
 export default function SearchScreen() {
-  const [category, setCategory] = useState<Category>("All");
-  const [query, setQuery] = useState("");
-  const [loading] = useState(false);
+  const [games, setGames] = useState<StoreItem[]>([]);
+  const [consoles, setConsoles] = useState<StoreItem[]>([]);
+  const [accessories, setAccessories] = useState<StoreItem[]>([]);
+  const [items, setItems] = useState<StoreItem[]>([]);
+  const [category, setCategory] = useState("All");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const visible = useMemo(() => {
-    let base: Product[] = [];
-    if (category === "Consoles") base = consoles;
-    else if (category === "Accessories") base = accessories;
-    else if (category === "All") base = [...consoles, ...accessories];
-    else if (category === "Games") base = [];
+  const { addToCart, items: cartItems } = useCart();      // 👈 from context
+  const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0); // 👈 total qty
 
-    if (!query.trim()) return base;
-    const q = query.toLowerCase();
-    return base.filter((p) => p.title.toLowerCase().includes(q));
-  }, [category, query]);
+  const API_KEY = "c1db19e921334df6accd48b12d95fb5a";
+  const { width } = Dimensions.get("window");
+  const cardWidth = width / 2 - 20;
+
+  useEffect(() => {
+    fetch(`https://api.rawg.io/api/games?key=${API_KEY}&page_size=30`)
+      .then(res => res.json())
+      .then(data => {
+        const list: StoreItem[] = data.results.map((g: any) => ({
+          id: g.id,
+          name: g.name,
+          price: Math.floor(Math.random() * 50 + 10),
+          image: g.background_image,
+          type: "Games",
+        }));
+        setGames(list);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.log(err);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    setConsoles([
+      { id: 201, name: "PlayStation 5", price: 499.99, image: require("../../assets/images/ps5.png"), type: "Consoles" },
+      { id: 202, name: "Xbox Series X", price: 499.99, image: require("../../assets/images/xboxx.png"), type: "Consoles" },
+      { id: 203, name: "Nintendo Switch", price: 299.99, image: require("../../assets/images/switch1.png"), type: "Consoles" },
+    ]);
+  }, []);
+
+  useEffect(() => {
+    setAccessories([
+      { id: 302, name: "Switch Joy-Cons", price: 69.99, image: require("../../assets/images/switch1joycons.png"), type: "Accessories" },
+      { id: 303, name: "Kirby Plush", price: 25.99, image: require("../../assets/images/kirbysplushy.png"), type: "Accessories" },
+    ]);
+  }, []);
+
+  useEffect(() => {
+    let allItems: StoreItem[] = [...games, ...consoles, ...accessories];
+
+    if (category !== "All") {
+      allItems = allItems.filter(item => item.type === category);
+    }
+
+    if (search.trim() !== "") {
+      allItems = allItems.filter(item =>
+        item.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    setItems(allItems);
+  }, [search, category, games, consoles, accessories]);
+
+  const renderItem = ({ item }: { item: StoreItem }) => (
+    <View style={[styles.card, { width: cardWidth }]}>
+      <Image
+        source={typeof item.image === "string" ? { uri: item.image } : item.image}
+        style={styles.cardImage}
+        resizeMode="cover"
+      />
+      <Text style={styles.cardTitle}>{item.name}</Text>
+      <Text style={styles.price}>${item.price}</Text>
+
+      {/* 👇 use addToCart from context */}
+      <TouchableOpacity
+        style={styles.cartButton}
+        onPress={() =>
+          addToCart({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+          })
+        }
+      >
+        <Text style={styles.cartText}>Add to Cart</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#00ffff" />
+        <Text style={{ color: "#fff", marginTop: 10 }}>Loading items...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.navbar}>
-          <Text style={styles.logo}>GameStart Search</Text>
+          <Text style={styles.logo}>GameStart</Text>
 
-          {/* <TouchableOpacity onPress={() => router.push("/signIn")}>
-            <Text style={styles.signInText}>Sign In</Text>
+          <Text style={styles.signInText}>Sign In</Text>
+
+          {/* 👇 header cart button uses cartCount and navigates to Cart tab */}
+          <TouchableOpacity
+            style={styles.cartBtn}
+            onPress={() => router.push('/cart')}
+          >
+            <Text style={styles.cartBtnText}>Cart ({cartCount})</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.cartButton}>
-            <Text style={styles.cartText}>Cart (0)</Text>
-          </TouchableOpacity> */}
         </View>
 
         {/* Search bar */}
         <TextInput
-          style={styles.searchBar}
+          style={styles.searchInput}
           placeholder="Search games, consoles, accessories..."
           placeholderTextColor="#ccc"
-          value={query}
-          onChangeText={setQuery}
-          returnKeyType="search"
+          value={search}
+          onChangeText={setSearch}
         />
       </View>
 
-      {/* Category bar with spacing below */}
-      <View style={styles.categoryWrapper}>
-        <CategoryBar
-          categories={["All", "Games", "Consoles", "Accessories"]}
-          value={category}
-          onChange={setCategory}
-        />
+      {/* Category Buttons */}
+      <View style={styles.filterRow}>
+        {["All", "Games", "Consoles", "Accessories"].map(c => (
+          <TouchableOpacity
+            key={c}
+            style={[styles.filterButton, category === c && styles.activeFilter]}
+            onPress={() => setCategory(c)}
+          >
+            <Text
+              style={[
+                styles.filterText,
+                category === c && styles.activeFilterText,
+              ]}
+            >
+              {c}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {category === "Games" && (
-        <Text style={styles.notice}>
-          Games API is disabled. Choose Consoles or Accessories.
-        </Text>
-      )}
-
-      {/* Product grid */}
-      {loading ? (
-        <ActivityIndicator color="#00ffff" style={{ marginTop: 20 }} />
-      ) : (
-        <FlatList
-          data={visible}
-          keyExtractor={(i) => i.id}
-          numColumns={2}
-          columnWrapperStyle={{ columnGap: 14 }}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Image source={{ uri: item.imageUrl }} style={styles.image} />
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.price}>${item.price.toFixed(2)}</Text>
-              <TouchableOpacity style={styles.cta}>
-                <Text style={styles.ctaText}>Add to Cart</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.empty}>No items match your search.</Text>
-          }
-        />
-      )}
+      {/* Results */}
+      <FlatList
+        data={items}
+        keyExtractor={item => item.id.toString()}
+        renderItem={renderItem}
+        numColumns={2}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80 }}
+      />
     </View>
   );
 }
 
-/* ---------- Styles ---------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
-
+  loading: {
+    flex: 1,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   header: {
     backgroundColor: "#000",
-    paddingTop: 10,
-    paddingBottom: 8,
+    paddingTop: 40,
+    paddingBottom: 10,
     alignItems: "center",
   },
   navbar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#111",
     width: "95%",
+    backgroundColor: "#111",
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderRadius: 12,
-    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  logo: { color: "#00ffff", fontSize: 28, fontWeight: "bold" },
-  signInText: { color: "#00ffff", fontWeight: "600", fontSize: 14 },
-  cartButton: {
+  logo: {
+    color: "#00ffff",
+    fontSize: 26,
+    fontWeight: "bold",
+  },
+  signInText: {
+    color: "#00ffff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  cartBtn: {
     backgroundColor: "#00ffff",
-    borderRadius: 8,
     paddingHorizontal: 8,
-    justifyContent: "center",
+    paddingVertical: 4,
+    borderRadius: 8,
   },
-  cartText: { color: "#000", fontWeight: "bold" },
-
-  searchBar: {
+  cartBtnText: {
+    color: "#000",
+    fontWeight: "bold",
+  },
+  searchInput: {
     width: "95%",
     backgroundColor: "#222",
-    color: "#fff",
-    borderRadius: 8,
-    paddingHorizontal: 12,
     height: 40,
-    borderWidth: 1,
-    borderColor: "#2b2b2b",
-    marginBottom: 6,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    color: "#fff",
+    marginTop: 10,
   },
-
-  categoryWrapper: {
-    marginBottom: 8,
+  filterRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 10,
+    marginBottom: 5,
   },
-
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 80,
+  filterButton: {
+    backgroundColor: "#111",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginHorizontal: 5,
   },
-
+  activeFilter: {
+    backgroundColor: "#00ffff",
+  },
+  filterText: {
+    color: "#ccc",
+  },
+  activeFilterText: {
+    color: "#000",
+    fontWeight: "bold",
+  },
   card: {
-    flex: 1,
     backgroundColor: "#111",
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#1a1a1a",
-    padding: 12,
-  },
-  image: {
-    width: "100%",
-    height: 130,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  title: { color: "#e9eef5", fontWeight: "800" },
-  price: { color: "#84e6ff", marginVertical: 6, fontWeight: "800" },
-  cta: {
-    backgroundColor: "#00ffff",
-    borderRadius: 10,
-    paddingVertical: 10,
+    padding: 10,
+    margin: 8,
     alignItems: "center",
   },
-  ctaText: { color: "#000", fontWeight: "900" },
-  empty: { color: "#9bb2c9", textAlign: "center", marginTop: 16 },
-  notice: { color: "#9bb2c9", paddingHorizontal: 16, marginBottom: 6 },
+  cardImage: {
+    width: "100%",
+    height: 120,
+    borderRadius: 8,
+  },
+  cardTitle: {
+    color: "#fff",
+    marginTop: 6,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  price: {
+    color: "#00ffff",
+    marginTop: 4,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  cartButton: {
+    backgroundColor: "#00ffff",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginTop: 8,
+  },
+  cartText: {
+    color: "#000",
+    fontWeight: "bold",
+  },
 });
