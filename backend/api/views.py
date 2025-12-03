@@ -8,4 +8,4 @@ def hello(request):
 @csrf_exempt
 def login(request, user_identifier):
     print(f"Logging in user: {user_identifier}")
-    return JsonResponse({"status": 400})
+    return JsonResponse({"status": "success"})
