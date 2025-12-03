@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { router } from 'expo-router';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator} from 'react-native';
-import { loginWithEmailPassword, registerNewUser } from '../../api/callProfileAPI'; // ⭐ NEW
+import { loginWithEmailPassword, registerNewUser } from '../../APICalls/callProfileAPI'; // ⭐ NEW
 
 
 export default function SignInScreen({ onBack }: any) {
