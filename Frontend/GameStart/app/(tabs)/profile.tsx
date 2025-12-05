@@ -51,15 +51,19 @@ const ProfileScreen = () => {
       </View>
 
       {/* My Orders */}
-      <View style={styles.menuCard}>
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuLeft}>
-            <Text style={styles.menuIcon}>📦</Text>
-            <Text style={styles.menuLabel}>My Orders</Text>
-          </View>
-          <Text style={styles.menuChevron}>›</Text>
-        </TouchableOpacity>
-      </View>
+<View style={styles.menuCard}>
+  <TouchableOpacity
+    style={styles.menuItem}
+    onPress={() => router.push("/orders")}
+  >
+    <View style={styles.menuLeft}>
+      <Text style={styles.menuIcon}>📦</Text>
+      <Text style={styles.menuLabel}>My Orders</Text>
+    </View>
+    <Text style={styles.menuChevron}>›</Text>
+  </TouchableOpacity>
+</View>
+
 
       {/* Sign Out */}
       <TouchableOpacity

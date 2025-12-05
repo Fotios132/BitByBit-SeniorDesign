@@ -1,10 +1,23 @@
 import React, { createContext, useContext, useState } from "react";
 
-type User = {
+type OrderItem = {
+  name: string;
+  qty: number;
+};
+
+type Order = {
+  id: string;
+  date: string;
+  items: OrderItem[];
+};
+
+export type User = {
   first?: string;
   last?: string;
-  email?: string;
+  email: string;
+  orders?: Order[];   // ⬅️ NEW
 };
+
 
 type AuthContextType = {
   user: User | null;
