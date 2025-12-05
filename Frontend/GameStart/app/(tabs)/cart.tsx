@@ -1,6 +1,15 @@
+// app/(tabs)/cart.tsx  (or wherever this file lives)
 import React from 'react';
-import {SafeAreaView, View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+} from 'react-native';
 import { useCart } from '../../context/CartContext';
+import { router } from 'expo-router';      // ⬅️ NEW
 
 const DARK_BG = '#000000ff';
 const CARD_BG = '#101827';
@@ -73,12 +82,24 @@ const CartScreen = () => {
               renderItem={renderItem}
               contentContainerStyle={{ paddingVertical: 10 }}
             />
+
+            {/* Footer with total + buttons */}
             <View style={styles.footer}>
-              <Text style={styles.totalText}>
-                Total: ${total.toFixed(2)}
-              </Text>
-              <TouchableOpacity onPress={clearCart}>
-                <Text style={styles.clearText}>Clear cart</Text>
+              <View>
+                <Text style={styles.totalText}>
+                  Total: ${total.toFixed(2)}
+                </Text>
+                <TouchableOpacity onPress={clearCart}>
+                  <Text style={styles.clearText}>Clear cart</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* NEW: go to checkout */}
+              <TouchableOpacity
+                style={styles.checkoutButton}
+                onPress={() => router.push('/checkout')}
+              >
+                <Text style={styles.checkoutText}>Checkout</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -181,6 +202,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   totalText: {
     color: TEXT_PRIMARY,
@@ -190,6 +212,18 @@ const styles = StyleSheet.create({
   clearText: {
     color: ACCENT,
     fontWeight: '600',
+    marginTop: 4,
+  },
+  checkoutButton: {
+    backgroundColor: ACCENT,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  checkoutText: {
+    color: DARK_BG,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
 
