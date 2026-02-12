@@ -2,14 +2,24 @@ import os
 from pymongo import MongoClient
 from typing import Optional
 
-# Match what you actually have in Compass:
-MONGO_URI = "mongodb://localhost:27017"
-DB_NAME = "admin"        # you are using the admin database
-USERS_COLL = "test"      # your collection is called "test"
+# Read connection settings from environment so we can switch between
+# local (Compass) and MongoDB Atlas without editing code.
+# Set MONGO_URI to a mongodb+srv://... Atlas URI in your environment.
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
+# Optional: override DB/collection names via environment as well
+DB_NAME = os.environ.get("MONGO_DB", "admin")
+USERS_COLL = os.environ.get("MONGO_USERS_COLL", "test")
+
 
 def get_db_client(uri: str = None) -> MongoClient:
+    """Return a PyMongo MongoClient. Defaults to env MONGO_URI.
+
+    Uses a short serverSelectionTimeoutMS so failures surface quickly during
+    development. The returned client still works for normal operations.
+    """
     uri = uri or MONGO_URI
-    return MongoClient(uri)
+    # Fail fast if the server is unreachable (5s)
+    return MongoClient(uri, serverSelectionTimeoutMS=5000)
 
 def find_user_by_email(email: str, client: Optional[MongoClient] = None) -> Optional[dict]:
     """Return the user document or None."""
