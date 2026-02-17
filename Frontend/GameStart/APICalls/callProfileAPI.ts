@@ -1,7 +1,7 @@
 const LOGIN_URL =
-  "http://gamestart-backend.azurewebsites.net/com.gamestart/v1/home/userauthentication/login/";
+  "https://gamestart-backend.azurewebsites.net/com.gamestart/v1/home/userauthentication/login/";
 const REGISTER_URL =
-  "http://gamestart-backend.azurewebsites.net/com.gamestart/v1/home/userauthentication/register/";
+  "https://gamestart-backend.azurewebsites.net/com.gamestart/v1/home/userauthentication/register/";
 // keep this as-is (you said assume it works)
 export async function loginWithEmailPassword(email: string, password: string) {
   const res = await fetch(`${LOGIN_URL}~${email}~${password}`, {
