@@ -25,8 +25,7 @@ SECRET_KEY = 'django-insecure-jywd2dy)1_8mupsx4hjove%c7r40asq_z3#78@xx0tx^33dvzx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -121,6 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = '/home/site/wwwroot/staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -136,7 +136,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "http://gamestarkt",  # <-- add this
+    "http://gamestarkt", # <-- add this
+    "https://gamestart-backend.azurewebsites.net", 
 ]
 
 # Or, for more security in production, specify your frontend's domain
