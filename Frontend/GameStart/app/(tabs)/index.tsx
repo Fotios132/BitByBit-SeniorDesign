@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { useAuth } from './context/AuthContext'; // ⬅️ adjust path if needed
+import { useAuth } from './context/AuthContext';
 import {
   StyleSheet,
   Text,
@@ -8,12 +8,13 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  ScrollView
+  ScrollView,
+  SafeAreaView
 } from 'react-native';
 
 export default function App() {
   const [showSignIn, setShowSignIn] = useState(false);
-  const { user } = useAuth();  // ⬅️ get logged-in user from context
+  const { user } = useAuth();
 
   const images = new Map([
     ['videoGames', 'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg'],
@@ -23,7 +24,7 @@ export default function App() {
 
   const isLoggedIn = !!user;
   const signInLabel = isLoggedIn
-    ? (user.first || user.email || 'Profile')   // what text to show when logged in
+    ? (user.first || user.email || 'Profile')
     : 'Sign In';
 
   const handleSignInPress = () => {
@@ -35,13 +36,12 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Fixed Header */}
       <View style={styles.header}>
         <View style={styles.navbar}>
           <Text style={styles.logo}>GameStart</Text>
 
-          {/* 🔹 This button now shows name/email when logged in */}
           <TouchableOpacity style={styles.signInButton} onPress={handleSignInPress}>
             <Text style={styles.signInText}>{signInLabel}</Text>
           </TouchableOpacity>
@@ -90,7 +90,7 @@ export default function App() {
           ))}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

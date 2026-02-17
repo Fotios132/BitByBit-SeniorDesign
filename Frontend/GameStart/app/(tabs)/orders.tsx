@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 import { router } from "expo-router";
 
@@ -15,34 +16,33 @@ export default function OrdersScreen() {
   const orders: any[] = [];
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Order History</Text>
-
-      {orders.length === 0 ? (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyText}>You have no orders yet</Text>
-        </View>
-      ) : (
-        orders.map((order, idx) => (
-          <View key={idx} style={styles.orderCard}>
-            <Text style={styles.orderTitle}>Order #{order.id}</Text>
-            <Text style={styles.orderDate}>{order.date}</Text>
-
-            <View style={styles.itemsBox}>
-              {order.items.map((item: any, index: number) => (
-                <Text key={index} style={styles.itemText}>
-                  • {item.name} (x{item.qty})
-                </Text>
-              ))}
-            </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollContent}>
+        <Text style={styles.title}>Order History</Text>
+        {orders.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>You have no orders yet</Text>
           </View>
-        ))
-      )}
-
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        ) : (
+          orders.map((order, idx) => (
+            <View key={idx} style={styles.orderCard}>
+              <Text style={styles.orderTitle}>Order #{order.id}</Text>
+              <Text style={styles.orderDate}>{order.date}</Text>
+              <View style={styles.itemsBox}>
+                {order.items.map((item: any, index: number) => (
+                  <Text key={index} style={styles.itemText}>
+                    • {item.name} (x{item.qty})
+                  </Text>
+                ))}
+              </View>
+            </View>
+          ))
+        )}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -52,6 +52,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+  },
+  scrollContent: {
+    flex: 1,
     padding: 20,
   },
   title: {
