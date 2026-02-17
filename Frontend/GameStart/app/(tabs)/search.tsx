@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {View, Text, TextInput, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator,} from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';   // 👈 add useLocalSearchParams
-import { useCart } from '../../context/CartContext'; // 👈 adjust path
-import CategoryBar, { Category } from '../../components/CategoryBar'; // 👈 adjust path
+import {View, Text, TextInput, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, SafeAreaView} from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useCart } from '../../context/CartContext';
+import CategoryBar, { Category } from '../../components/CategoryBar';
+
 type StoreItem = {
   id: number;
   name: string;
@@ -19,46 +20,28 @@ export default function SearchScreen() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // 👇 read category from navigation params
-  // 👇 read category from navigation params
-const { category: categoryParam } = useLocalSearchParams<{ category?: string | string[] }>();
-
-const [category, setCategory] = useState<Category>("All");
-
-  // const [category, setCategory] = useState<Category>(() => {
-  // if (
-  //    categoryParam === "Games" ||
-  //    categoryParam === "Consoles" ||
-  //    categoryParam === "Accessories"
-  // ) {
-  //    return categoryParam;
-  //  }
-  // return "All";
-  // });
+  const { category: categoryParam } = useLocalSearchParams<{ category?: string | string[] }>();
+  const [category, setCategory] = useState<Category>("All");
 
   useEffect(() => {
-  let value = categoryParam;
+    let value = categoryParam;
+    if (Array.isArray(value)) {
+      value = value[0];
+    }
+    if (value === "Games" || value === "Consoles" || value === "Accessories") {
+      setCategory(value);
+    } else {
+      setCategory("All");
+    }
+  }, [categoryParam]);
 
-  // handle case where param is an array 
-  if (Array.isArray(value)) {
-    value = value[0];
-  }
-
-  if (value === "Games" || value === "Consoles" || value === "Accessories") {
-    setCategory(value);
-  } else {
-    setCategory("All");
-  }
-}, [categoryParam]);
-
-  const { addToCart, items: cartItems } = useCart();      // from context
-  const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0); // total qty of items in cart
+  const { addToCart, items: cartItems } = useCart();
+  const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
 
   const API_KEY = "c1db19e921334df6accd48b12d95fb5a";
   const { width } = Dimensions.get("window");
   const cardWidth = width / 2 - 20;
 
-  //API call to fetch games from RAWG
   useEffect(() => {
     fetch(`https://api.rawg.io/api/games?key=${API_KEY}&page_size=30`)
       .then(res => res.json())
@@ -120,7 +103,6 @@ const [category, setCategory] = useState<Category>("All");
       <Text style={styles.cardTitle}>{item.name}</Text>
       <Text style={styles.price}>${item.price}</Text>
 
-      {/* 👇 use addToCart from context */}
       <TouchableOpacity
         style={styles.cartButton}
         onPress={() =>
@@ -139,23 +121,20 @@ const [category, setCategory] = useState<Category>("All");
 
   if (loading) {
     return (
-      <View style={styles.loading}>
+      <SafeAreaView style={styles.loading}>
         <ActivityIndicator size="large" color="#00ffff" />
         <Text style={{ color: "#fff", marginTop: 10 }}>Loading items...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.navbar}>
           <Text style={styles.logo}>GameStart</Text>
-
           <Text style={styles.signInText}>Sign In</Text>
-
-          {/* header cart button uses cartCount and navigates to Cart tab */}
           <TouchableOpacity
             style={styles.cartBtn}
             onPress={() => router.push('/cart')}
@@ -164,7 +143,6 @@ const [category, setCategory] = useState<Category>("All");
           </TouchableOpacity>
         </View>
 
-        {/* Search bar */}
         <TextInput
           style={styles.searchInput}
           placeholder="Search games, consoles, accessories..."
@@ -203,7 +181,7 @@ const [category, setCategory] = useState<Category>("All");
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

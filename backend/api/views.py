@@ -39,7 +39,12 @@ def login(request, user_identifier):
             first = ""
             last = ""
     except Exception as e:
-        return JsonResponse({"error": "checker error", "details": str(e)}, status=500)
+        import traceback
+        return JsonResponse({
+            "error": "checker error", 
+            "details": str(e),
+            "traceback": traceback.format_exc()
+        }, status=500)
 
     return JsonResponse(
         {

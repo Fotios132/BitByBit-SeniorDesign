@@ -1,0 +1,1 @@
+web: gunicorn GameStart_B.wsgi --log-file -
