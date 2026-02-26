@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { useAuth } from './(tabs)/context/AuthContext'; 
 
 const DARK_BG = '#000000ff';
 const CARD_BG = '#101827';
@@ -19,12 +20,42 @@ const TEXT_SECONDARY = '#9ca3af';
 const BORDER = '#1f2937';
 
 export default function CheckoutScreen() {
+  const { user } = useAuth(); 
+
+  // for none users)
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <View style={styles.navbar}>
+            <Text style={styles.logo}>Checkout</Text>
+          </View>
+        </View>
+
+        <View style={styles.mustSignInWrap}>
+          <Text style={styles.mustSignInText}>Must be signed in</Text>
+
+          <TouchableOpacity
+            style={styles.goSignInButton}
+            onPress={() => router.replace('/signIn')}
+          >
+            <Text style={styles.goSignInText}>Go to Sign In</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backText}>← Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   // read total from route params
   const { total } = useLocalSearchParams<{ total?: string }>();
 
   const numericTotal = total ? parseFloat(total) : 0;
   const displayTotal = numericTotal.toFixed(2);
-  const [method, setMethod] = useState<"credit" | "debit">("credit");
+  const [method, setMethod] = useState<'credit' | 'debit'>('credit');
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -90,7 +121,7 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
-        {/* Card details (dummy for now) */}
+        {/* Card details needs work  */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             {method === 'credit' ? 'Credit Card Details' : 'Debit Card Details'}
@@ -125,7 +156,7 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
-        {/* Buttons – no real payment logic yet */}
+        {/* no payment logic just the buttons */}
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={styles.backButton}
@@ -284,6 +315,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   payText: {
+    color: DARK_BG,
+    fontWeight: '700',
+    fontSize: 16,
+  },
+
+  // Block screen for CE14
+  mustSignInWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  mustSignInText: {
+    color: '#f97373',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  goSignInButton: {
+    width: '100%',
+    borderRadius: 10,
+    backgroundColor: ACCENT,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  goSignInText: {
     color: DARK_BG,
     fontWeight: '700',
     fontSize: 16,

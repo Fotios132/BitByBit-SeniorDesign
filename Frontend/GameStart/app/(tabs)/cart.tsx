@@ -1,6 +1,6 @@
-// app/(tabs)/cart.tsx  — or wherever your file is located
+// app/(tabs)/cart.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   View,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from './context/AuthContext'; 
 
 const DARK_BG = '#000000ff';
 const CARD_BG = '#101827';
@@ -21,6 +22,8 @@ const BORDER = '#1f2937';
 
 const CartScreen = () => {
   const { items, removeFromCart, setQuantity, clearCart } = useCart();
+  const { user } = useAuth(); 
+  const [authError, setAuthError] = useState<string | null>(null); 
 
   const total = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -85,7 +88,10 @@ const CartScreen = () => {
               contentContainerStyle={{ paddingVertical: 10 }}
             />
 
-            {/* Footer with total + checkout */}
+            {/* will show the error */}
+            {authError && <Text style={styles.authError}>{authError}</Text>}
+
+            {/* Footer with total and checkout */}
             <View style={styles.footer}>
               <Text style={styles.totalText}>
                 Total: ${total.toFixed(2)}
@@ -95,15 +101,21 @@ const CartScreen = () => {
                 <Text style={styles.clearText}>Clear cart</Text>
               </TouchableOpacity>
 
-              {/* ★ SEND TOTAL INTO CHECKOUT */}
+              {/* will send total checkout*/}
               <TouchableOpacity
                 style={styles.checkoutButton}
-                onPress={() =>
+                onPress={() => {
+                  if (!user) {
+                    setAuthError('Must be signed in');
+                    return;
+                  }
+
+                  setAuthError(null);
                   router.push({
                     pathname: '/checkout',
                     params: { total: total.toString() },
-                  })
-                }
+                  });
+                }}
               >
                 <Text style={styles.checkoutText}>Checkout</Text>
               </TouchableOpacity>
@@ -235,5 +247,13 @@ const styles = StyleSheet.create({
     color: DARK_BG,
     fontWeight: '700',
     fontSize: 16,
+  },
+
+  //Auth error fixer
+  authError: {
+    color: '#f97373',
+    fontWeight: '700',
+    marginTop: 6,
+    marginBottom: 6,
   },
 });
