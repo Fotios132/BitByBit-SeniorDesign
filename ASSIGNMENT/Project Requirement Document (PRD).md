@@ -1,92 +1,133 @@
-# 1. Introduction & Overview
+# BitByBit — Product Requirements Document
 
-## 1.1 Problem Statement
-Gamers struggle to find a single, user-friendly platform where they can browse video games, consoles, and accessories, compare across platforms, and make quick purchases. Existing e-commerce sites are either too broad (general online stores) or lack intelligent recommendations.  
-Also, our e-commerce website will provide unique statistical data for each game to boost customer satisfaction.  
-
-<<<<<<< HEAD
-[Prototype Link](https://ee5fc77b95d0407490eef3227e34fce6-main.projects.builder.my)
-=======
-
->>>>>>> fazlul
-
-**How the Application should function:**
-
-## 1.2 Proposed Solution
-**BitByBit** is an e-commerce application dedicated to gamers. It allows users to:
-
-- Browse games, consoles, and accessories.
-- Search by platform (e.g., PlayStation, Nintendo Switch).
-- Add products to a cart with instant pop-out preview.
-- Checkout after logging in or registering.
-- Use a smart chatbot (powered by **LangChain + RAWG API**) for personalized recommendations, live player stats, and ratings.
-
-### Application Design
-
-## 1.3 Target Audience
-- **Primary:** Casual and hardcore gamers (ages 15–35) looking for an easy way to discover and buy games and consoles.
-- **Secondary:** Parents or gift buyers seeking games or accessories with minimal effort.
+**Team:** Fazlul F, Eitan A, Joshua D, Fotios B, Moh P
 
 ---
 
-# 2. Goals & Success Metrics
+## 1. Introduction & Overview
 
-## 2.1 Project Goals
-- **Usability Goal:** Users should be able to search for a game and add it to the cart in under 30 seconds.
-- **Business Goal:** Establish BitByBit as a go-to platform for gaming products and achieve high engagement through chatbot recommendations.
-- **Efficiency Goal:** Launch a Minimum Viable Product (MVP) with required features within one semester timeframe.
+### 1.1 Problem Statement
 
-## 2.2 Success Metrics (KPIs)
-- **Daily Active Users (DAU):** Target 500+ within the first month of beta.
-- **Cart Conversion Rate:** 30% of users who add items to cart should proceed to checkout.
-- **User Satisfaction:** Maintain 4.5+ rating in app usability surveys.
+Gamers lack a centralized, intelligent platform dedicated exclusively to video games, consoles, and accessories. Existing e-commerce platforms:
 
----
+- Are overly broad and not gamer-focused
+- Lack advanced personalization
+- Do not integrate intelligent support systems
+- Do not leverage AI for engagement and retention
 
-# 3. Feature Requirements
+> The market opportunity is a focused, AI-enhanced gaming marketplace.
 
-<<<<<<< HEAD
-## Required Features (Core Functionality – MVP)
-=======
-## Required Features 
->>>>>>> fazlul
-- Homepage navigation (Games, Consoles, Accessories).
-- Login/Registration.
-- Browse by platform (PS4, Switch, etc.).
-- Product search (name, category).
-- Add to cart (pop-out view with clear/remove options).
-- Checkout flow.
+### 1.2 Proposed Solution
 
-<<<<<<< HEAD
-## Desired Features (Improves Usability & Appearance)
-=======
-## Desired Features 
->>>>>>> fazlul
-- Enhanced search filters (price range, genre, release date).
-- Clean and responsive UI design (mobile-first).
-- Cart saved across sessions (user can log out and return later).
-- Sorting options (by popularity, rating, or price).
-- Simple “recommended for you” section based on trending games.
+BitByBit is an e-commerce application dedicated to gamers. It allows users to:
 
-<<<<<<< HEAD
-## Aspirational Features (Makes the App Stand Out)
-=======
-## Aspirational Features
->>>>>>> fazlul
-- Smart chatbot (**LangChain + RAWG API**) with live stats, reviews, and recommendations.
-- Personalized recommendations based on browsing/purchase history.
-- Wishlist/Favorites.
-- Gamified loyalty points system for frequent buyers.
+- Browse games, consoles, and accessories
+- Search by platform (e.g., PlayStation, Nintendo Switch)
+- Add products to a cart with instant pop-out preview
+- Checkout after logging in or registering
+- Use a smart chatbot (powered by LangChain + RAWG API) for personalized recommendations, live player stats, and ratings
+
+### 1.3 Target Audience
+
+**Primary:**
+- Casual Gamers
+- Hardcore Gaming Enthusiasts
+
+**Secondary:**
+- Parents or gift buyers seeking games or accessories with minimal effort
 
 ---
 
-# 4. Out of Scope
-- Offline app mode.
-- Multi-language support (future versions only).
+## 2. Technology Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | React / React Native |
+| **Backend** | Python Django (REST APIs) |
+| **Database** | MongoDB (NoSQL) |
+| **Infrastructure** | AWS or Azure, MongoDB Atlas, Redis, Celery |
+
+### AI Models (Open-Source)
+
+| Model | Use Case |
+|---|---|
+| DistilBERT | Sentiment & behavioral modeling |
+| Mistral-7B-Instruct | Conversational chatbot |
+| Flan-T5-Large | Email personalization |
+
+> All models are free and open-source to eliminate recurring API costs.
 
 ---
 
-# 5. Open Questions
-- What is the monetization model? (Direct sales only, or commission from third-party sellers?)
-- Will payment processing be handled internally or through an external service (e.g., Stripe, PayPal)?
-- Should the chatbot provide customer support (order tracking) in addition to game recommendations?
+## 3. Goals & Success Metrics
+
+### 3.1 Project Goals
+
+- **Usability Goal:** All users should be able to search for a game and add it to the cart in under 30 seconds (AI-assisted)
+- **Business Goal:** Establish BitByBit as a go-to platform for gaming products and achieve high engagement through chatbot recommendations
+
+### 3.2 Success Metrics / KPIs *(For Future)*
+
+| Metric | Target |
+|---|---|
+| Daily Active Users (DAU) | 500+ within first month of beta |
+| Cart Conversion Rate | 30% of users who add items proceed to checkout |
+| User Satisfaction | 4.5+ rating in app usability surveys |
+
+### 3.3 AI Performance Goals
+
+- Measurable lift in engagement and revenue
+- Reduced operational support costs
+- Increased retention via personalization
+
+---
+
+## 4. Feature Requirements
+
+### Infrastructure & Integration Requirements
+
+- Google OAuth 2.0 authentication
+- Secure payment integration
+- Order management and tracking
+- Refund workflow
+- Cloud deployment (AWS/Azure)
+- Redis caching
+- Celery background task processing
+- AI-powered personalization systems
+
+### ✅ Required Features (Core MVP)
+
+- Homepage navigation (Games, Consoles, Accessories)
+- Login / Registration
+- Chat with AI to get best and latest games
+- Product search (name, category) with AI search
+- Add to cart (pop-out view with clear/remove options)
+- Checkout via Stripe
+
+### 🔵 Desired Features (Improves Usability & Appearance)
+
+- Enhanced search filters (price range, genre, release date)
+- Clean and responsive UI design (mobile-first)
+- Cart saved across sessions
+- Sorting options (by popularity, rating, or price)
+- Simple "Recommended for You" section powered by LLM trending data
+
+### ⭐ Aspirational Features (Differentiators)
+
+- Smart chatbot (Groq) with live stats, reviews, and recommendations
+- Personalized recommendations based on browsing/purchase history
+- Wishlist / Favorites
+- Gamified loyalty points system for frequent buyers
+
+---
+
+## 5. Out of Scope
+
+- Offline app mode
+- Multi-language support *(planned for future versions)*
+
+---
+
+## 6. Open Questions
+
+- What is the monetization model? *(Direct sales only, or commission from third-party sellers?)*
