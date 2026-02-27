@@ -103,6 +103,7 @@ BitByBit is an e-commerce application dedicated to gamers. It allows users to:
 - Product search (name, category) with AI search
 - Add to cart (pop-out view with clear/remove options)
 - Checkout via Stripe
+- AI-powered personalization systems
 
 ### 🔵 Desired Features (Improves Usability & Appearance)
 
