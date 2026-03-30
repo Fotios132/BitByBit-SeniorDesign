@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { router } from "expo-router";
-import { useAuth } from "./context/AuthContext"; // ⬅️ check this path
+import { useAuth } from "@/context/AuthContext"; // ⬅️ check this path
 import {
   View,
   Text,
@@ -87,6 +87,7 @@ export default function SignInScreen({ onBack }: any) {
         }
 
         setUser({
+          id: res.email,
           first: res.first,
           last: res.last,
           email: res.email,
@@ -113,6 +114,7 @@ export default function SignInScreen({ onBack }: any) {
         }
 
         setUser({
+          id: res.email,
           first: res.first,
           last: res.last,
           email: res.email,

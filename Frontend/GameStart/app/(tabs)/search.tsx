@@ -13,12 +13,12 @@ type StoreItem = {
 };
 
 export default function SearchScreen() {
-  const [games, setGames] = useState<StoreItem[]>([]);
+  const [rawgGames, setRawgGames] = useState<StoreItem[]>([]);
   const [consoles, setConsoles] = useState<StoreItem[]>([]);
   const [accessories, setAccessories] = useState<StoreItem[]>([]);
   const [items, setItems] = useState<StoreItem[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const { category: categoryParam } = useLocalSearchParams<{ category?: string | string[] }>();
   const [category, setCategory] = useState<Category>("All");
@@ -42,25 +42,40 @@ export default function SearchScreen() {
   const { width } = Dimensions.get("window");
   const cardWidth = width / 2 - 20;
 
-  useEffect(() => {
-    fetch(`https://api.rawg.io/api/games?key=${API_KEY}&page_size=30`)
+  const fetchRawgGames = (query = "") => {
+    setLoading(true);
+    const q = query.trim();
+    const url = q
+      ? `https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(q)}&page_size=30`
+      : `https://api.rawg.io/api/games?key=${API_KEY}&page_size=30`;
+
+    fetch(url)
       .then(res => res.json())
       .then(data => {
-        const list: StoreItem[] = data.results.map((g: any) => ({
+        const list: StoreItem[] = (data.results || []).map((g: any) => ({
           id: g.id,
           name: g.name,
           price: Math.floor(Math.random() * 50 + 10),
-          image: g.background_image,
+          image: g.background_image || "",
           type: "Games",
         }));
-        setGames(list);
-        setLoading(false);
+        setRawgGames(list);
       })
       .catch(err => {
-        console.log(err);
-        setLoading(false);
-      });
+        console.log("RAWG fetch error", err);
+        setRawgGames([]);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchRawgGames("");
   }, []);
+
+  useEffect(() => {
+    const handler = setTimeout(() => fetchRawgGames(search), 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   useEffect(() => {
     setConsoles([
@@ -78,20 +93,26 @@ export default function SearchScreen() {
   }, []);
 
   useEffect(() => {
-    let allItems: StoreItem[] = [...games, ...consoles, ...accessories];
+    let allItems: StoreItem[] = [];
 
-    if (category !== "All") {
-      allItems = allItems.filter(item => item.type === category);
+    if (category === "Games") {
+      allItems = rawgGames;
+    } else if (category === "Consoles") {
+      allItems = consoles;
+    } else if (category === "Accessories") {
+      allItems = accessories;
+    } else {
+      allItems = [...rawgGames, ...consoles, ...accessories];
     }
 
-    if (search.trim() !== "") {
+    if (search.trim() !== "" && category !== "Games") {
       allItems = allItems.filter(item =>
         item.name.toLowerCase().includes(search.toLowerCase())
       );
     }
 
     setItems(allItems);
-  }, [search, category, games, consoles, accessories]);
+  }, [search, category, rawgGames, consoles, accessories]);
 
   const renderItem = ({ item }: { item: StoreItem }) => (
     <View style={[styles.card, { width: cardWidth }]}>

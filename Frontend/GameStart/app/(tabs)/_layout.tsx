@@ -4,7 +4,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CartProvider, useCart } from "../../context/CartContext";
-import { useAuth } from "./context/AuthContext"; // 👈 check this path
+import { useAuth } from "../../context/AuthContext"; // 👈 check this path
 
 // 🔹 Custom Cart tab icon that shows the item count badge
 function CartTabIcon({ color, size }: { color: string; size: number }) {

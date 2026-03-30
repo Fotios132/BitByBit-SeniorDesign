@@ -1,9 +1,11 @@
+import resend
+import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
 from .simple_account_checker import check_credentials, find_user_by_email
 from .simple_account_creator import create_account
 
+resend.api_key = "re_ikfrwUvQ_GvSzQUZCDiMN65hpUuueNov3"
 
 def hello(request):
     return JsonResponse({"message": "Hello World"})
@@ -98,3 +100,34 @@ def register(request, user_info):
             "last": last,
         }
     )
+
+@csrf_exempt
+def send_order_email(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            email = data.get("email")
+            order = data.get("order")
+
+            items = "\n".join([
+                f"{item['name']} x{item['qty']}"
+                for item in order["items"]
+            ])
+
+            resend.Emails.send({
+                "from": "GameStart <onboarding@resend.dev>",
+                "to": email,
+                "subject": "GameStart Order Confirmation",
+                "text": f"""
+                Order Confirmed
+                Order ID: {order['id']}
+                Date: {order['date']}
+                Items:{items}
+                Thank you for shopping with GameStart """
+            })
+
+            return JsonResponse({"success": True})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)

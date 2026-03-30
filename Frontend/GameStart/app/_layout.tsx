@@ -8,8 +8,8 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-// ⬅️ NEW: import your AuthProvider
-import { AuthProvider } from './(tabs)/context/AuthContext';
+import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from "@/context/AuthContext";   // <-- ADD THIS
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -18,21 +18,20 @@ export default function RootLayout() {
   });
 
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 
   return (
-    // 🔹 Wrap the whole app in AuthProvider so useAuth() works everywhere
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          {/* your tab navigator */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AuthProvider>
+    <CartProvider>
+      <AuthProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </AuthProvider>
+    </CartProvider>
   );
 }
