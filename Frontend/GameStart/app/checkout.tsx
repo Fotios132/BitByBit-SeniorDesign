@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext'; 
@@ -58,6 +59,8 @@ export default function CheckoutScreen() {
   const numericTotal = total ? parseFloat(total) : 0;
   const displayTotal = numericTotal.toFixed(2);
   const [method, setMethod] = useState<'credit' | 'debit'>('credit');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -168,30 +171,50 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.payButton}
+            style={[styles.payButton, submitting && styles.disabledButton]}
+            disabled={submitting}
             onPress={async () => {
+              setSubmitting(true);
+              setError(null);
+
               const order = {
                 id: Date.now().toString(),
                 date: new Date().toLocaleString(),
-                items: items.map(i => ({
-                  name: i.name,
-                  qty: i.quantity
-                }))
+                total: displayTotal,
+                items: items.map(i => ({ name: i.name, qty: i.quantity, price: i.price })),
               };
 
-              await fetch(
-                "http://127.0.0.1:8000/com.gamestart/v1/order/send",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    email: user.email,
-                    order
-                  }),
+              try {
+                const response = await fetch(
+                  "http://127.0.0.1:8000/com.gamestart/v1/order/send",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email: user.email, order }),
+                  }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || result.error) {
+                  const serverMessage = result.error || `HTTP status ${response.status}`;
+                  setError(serverMessage);
+                  Alert.alert("Payment Failed", serverMessage);
+                  return;
                 }
-              );
+
+                Alert.alert("Success", "Payment confirmed and email sent.");
+                router.replace("/orderSuccess");
+              } catch (err) {
+                const message = err instanceof Error ? err.message : "Unknown error";
+                setError(message);
+                console.error("Failed to send order:", message);
+                Alert.alert("Payment Failed", message);
+              } finally {
+                setSubmitting(false);
+              }
             }}
           >
             <Text style={styles.payText}>Confirm Payment</Text>
@@ -255,6 +278,9 @@ const styles = StyleSheet.create({
   backText: {
     color: TEXT_PRIMARY,
     fontSize: 16,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   container: {
     flex: 1,

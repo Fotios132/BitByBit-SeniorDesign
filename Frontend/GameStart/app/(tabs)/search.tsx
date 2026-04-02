@@ -45,9 +45,10 @@ export default function SearchScreen() {
   const fetchRawgGames = (query = "") => {
     setLoading(true);
     const q = query.trim();
+    const baseUrl = `https://api.rawg.io/api/games?key=${API_KEY}&platforms=16,14,187,7,186&ordering=-rating&page_size=40`;
     const url = q
-      ? `https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(q)}&page_size=30`
-      : `https://api.rawg.io/api/games?key=${API_KEY}&page_size=30`;
+      ? `${baseUrl}&search=${encodeURIComponent(q)}`
+      : baseUrl;
 
     fetch(url)
       .then(res => res.json())
