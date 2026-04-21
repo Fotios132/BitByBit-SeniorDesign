@@ -13,6 +13,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext'; 
 import { useCart } from '@/context/CartContext';
+import { submitOrder } from '@/APICalls/callOrderAPI';
 
 const DARK_BG = '#000000ff';
 const CARD_BG = '#101827';
@@ -23,35 +24,7 @@ const BORDER = '#1f2937';
 
 export default function CheckoutScreen() {
   const { user } = useAuth(); 
-  const { items } = useCart(); // <-- ADDED
-
-  // for none users)
-  if (!user) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
-          <View style={styles.navbar}>
-            <Text style={styles.logo}>Checkout</Text>
-          </View>
-        </View>
-
-        <View style={styles.mustSignInWrap}>
-          <Text style={styles.mustSignInText}>Must be signed in</Text>
-
-          <TouchableOpacity
-            style={styles.goSignInButton}
-            onPress={() => router.replace('/signIn')}
-          >
-            <Text style={styles.goSignInText}>Go to Sign In</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const { items, clearCart } = useCart(); // <-- ADDED clearCart
 
   // read total from route params
   const { total } = useLocalSearchParams<{ total?: string }>();
@@ -61,6 +34,25 @@ export default function CheckoutScreen() {
   const [method, setMethod] = useState<'credit' | 'debit'>('credit');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // for non-authenticated users
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <View style={styles.navbar}>
+            <Text style={styles.logo}>Checkout</Text>
+          </View>
+        </View>
+        <View style={styles.mustSignInWrap}>
+          <Text style={styles.mustSignInText}>Please sign in to complete your purchase</Text>
+          <TouchableOpacity style={styles.goSignInButton} onPress={() => router.replace('/(auth)/login')}>
+            <Text style={styles.goSignInText}>Go to Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -174,6 +166,7 @@ export default function CheckoutScreen() {
             style={[styles.payButton, submitting && styles.disabledButton]}
             disabled={submitting}
             onPress={async () => {
+              console.log('Confirm Payment pressed');
               setSubmitting(true);
               setError(null);
 
@@ -184,33 +177,21 @@ export default function CheckoutScreen() {
                 items: items.map(i => ({ name: i.name, qty: i.quantity, price: i.price })),
               };
 
+              console.log('Order:', order);
+              console.log('User email:', user.email);
+
               try {
-                const response = await fetch(
-                  "http://127.0.0.1:8000/com.gamestart/v1/order/send",
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ email: user.email, order }),
-                  }
-                );
-
-                const result = await response.json();
-
-                if (!response.ok || result.error) {
-                  const serverMessage = result.error || `HTTP status ${response.status}`;
-                  setError(serverMessage);
-                  Alert.alert("Payment Failed", serverMessage);
-                  return;
-                }
-
+                console.log('Calling submitOrder...');
+                await submitOrder(user.email, order);
+                console.log('submitOrder success');
+                // Clear cart
+                clearCart();
                 Alert.alert("Success", "Payment confirmed and email sent.");
-                router.replace("/orderSuccess");
+                router.replace("/(tabs)/orders");
               } catch (err) {
+                console.log('submitOrder error:', err);
                 const message = err instanceof Error ? err.message : "Unknown error";
                 setError(message);
-                console.error("Failed to send order:", message);
                 Alert.alert("Payment Failed", message);
               } finally {
                 setSubmitting(false);

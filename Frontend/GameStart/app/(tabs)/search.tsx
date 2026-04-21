@@ -42,31 +42,51 @@ export default function SearchScreen() {
   const { width } = Dimensions.get("window");
   const cardWidth = width / 2 - 20;
 
+  // PS4=18, PS5=187, Switch=7, Xbox One=1, Xbox Series X=186
+  const PLATFORMS = "18,187,7,1,186";
+
   const fetchRawgGames = (query = "") => {
     setLoading(true);
     const q = query.trim();
-    const baseUrl = `https://api.rawg.io/api/games?key=${API_KEY}&platforms=16,14,187,7,186&ordering=-rating&page_size=40`;
-    const url = q
-      ? `${baseUrl}&search=${encodeURIComponent(q)}`
-      : baseUrl;
 
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        const list: StoreItem[] = (data.results || []).map((g: any) => ({
-          id: g.id,
-          name: g.name,
-          price: Math.floor(Math.random() * 50 + 10),
-          image: g.background_image || "",
-          type: "Games",
-        }));
-        setRawgGames(list);
-      })
-      .catch(err => {
-        console.log("RAWG fetch error", err);
-        setRawgGames([]);
-      })
-      .finally(() => setLoading(false));
+    if (q) {
+      // search mode: single fetch with search query
+      const url = `https://api.rawg.io/api/games?key=${API_KEY}&platforms=${PLATFORMS}&ordering=-added&page_size=40&search=${encodeURIComponent(q)}`;
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const list: StoreItem[] = (data.results || []).map((g: any) => ({
+            id: g.id,
+            name: g.name,
+            price: Math.floor(Math.random() * 50 + 10),
+            image: g.background_image || "",
+            type: "Games",
+          }));
+          setRawgGames(list);
+        })
+        .catch(err => { console.log("RAWG fetch error", err); setRawgGames([]); })
+        .finally(() => setLoading(false));
+    } else {
+      // trending mode: fetch 5 pages of 100 = 500 games sorted by -added (trending)
+      const pages = [1, 2, 3, 4, 5];
+      Promise.all(
+        pages.map(page =>
+          fetch(`https://api.rawg.io/api/games?key=${API_KEY}&platforms=${PLATFORMS}&ordering=-added&page_size=100&page=${page}`)
+            .then(res => res.json())
+            .then(data => (data.results || []).map((g: any) => ({
+              id: g.id,
+              name: g.name,
+              price: Math.floor(Math.random() * 50 + 10),
+              image: g.background_image || "",
+              type: "Games" as const,
+            })))
+            .catch(() => [])
+        )
+      ).then(pages => {
+        const all: StoreItem[] = ([] as StoreItem[]).concat(...pages);
+        setRawgGames(all);
+      }).finally(() => setLoading(false));
+    }
   };
 
   useEffect(() => {

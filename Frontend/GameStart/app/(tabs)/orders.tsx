@@ -9,11 +9,11 @@ import {
   SafeAreaView,
 } from "react-native";
 import { router } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
 
 export default function OrdersScreen() {
-  // Later you can load real orders from backend.
-  // For now, just pretend there are none:
-  const orders: any[] = [];
+  const { user } = useAuth();
+  const orders = user?.orders || [];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -31,10 +31,11 @@ export default function OrdersScreen() {
               <View style={styles.itemsBox}>
                 {order.items.map((item: any, index: number) => (
                   <Text key={index} style={styles.itemText}>
-                    • {item.name} (x{item.qty})
+                    • {item.name} (x{item.qty}) @ ${item.price?.toFixed(2)}
                   </Text>
                 ))}
               </View>
+              <Text style={styles.orderTotal}>Total: ${order.total}</Text>
             </View>
           ))
         )}
