@@ -13,12 +13,12 @@ type StoreItem = {
 };
 
 export default function SearchScreen() {
-  const [games, setGames] = useState<StoreItem[]>([]);
+  const [rawgGames, setRawgGames] = useState<StoreItem[]>([]);
   const [consoles, setConsoles] = useState<StoreItem[]>([]);
   const [accessories, setAccessories] = useState<StoreItem[]>([]);
   const [items, setItems] = useState<StoreItem[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const { category: categoryParam } = useLocalSearchParams<{ category?: string | string[] }>();
   const [category, setCategory] = useState<Category>("All");
@@ -42,25 +42,61 @@ export default function SearchScreen() {
   const { width } = Dimensions.get("window");
   const cardWidth = width / 2 - 20;
 
+  // PS4=18, PS5=187, Switch=7, Xbox One=1, Xbox Series X=186
+  const PLATFORMS = "18,187,7,1,186";
+
+  const fetchRawgGames = (query = "") => {
+    setLoading(true);
+    const q = query.trim();
+
+    if (q) {
+      // search mode: single fetch with search query
+      const url = `https://api.rawg.io/api/games?key=${API_KEY}&platforms=${PLATFORMS}&ordering=-added&page_size=40&search=${encodeURIComponent(q)}`;
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const list: StoreItem[] = (data.results || []).map((g: any) => ({
+            id: g.id,
+            name: g.name,
+            price: Math.floor(Math.random() * 50 + 10),
+            image: g.background_image || "",
+            type: "Games",
+          }));
+          setRawgGames(list);
+        })
+        .catch(err => { console.log("RAWG fetch error", err); setRawgGames([]); })
+        .finally(() => setLoading(false));
+    } else {
+      // trending mode: fetch 5 pages of 100 = 500 games sorted by -added (trending)
+      const pages = [1, 2, 3, 4, 5];
+      Promise.all(
+        pages.map(page =>
+          fetch(`https://api.rawg.io/api/games?key=${API_KEY}&platforms=${PLATFORMS}&ordering=-added&page_size=100&page=${page}`)
+            .then(res => res.json())
+            .then(data => (data.results || []).map((g: any) => ({
+              id: g.id,
+              name: g.name,
+              price: Math.floor(Math.random() * 50 + 10),
+              image: g.background_image || "",
+              type: "Games" as const,
+            })))
+            .catch(() => [])
+        )
+      ).then(pages => {
+        const all: StoreItem[] = ([] as StoreItem[]).concat(...pages);
+        setRawgGames(all);
+      }).finally(() => setLoading(false));
+    }
+  };
+
   useEffect(() => {
-    fetch(`https://api.rawg.io/api/games?key=${API_KEY}&page_size=30`)
-      .then(res => res.json())
-      .then(data => {
-        const list: StoreItem[] = data.results.map((g: any) => ({
-          id: g.id,
-          name: g.name,
-          price: Math.floor(Math.random() * 50 + 10),
-          image: g.background_image,
-          type: "Games",
-        }));
-        setGames(list);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.log(err);
-        setLoading(false);
-      });
+    fetchRawgGames("");
   }, []);
+
+  useEffect(() => {
+    const handler = setTimeout(() => fetchRawgGames(search), 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   useEffect(() => {
     setConsoles([
@@ -78,20 +114,26 @@ export default function SearchScreen() {
   }, []);
 
   useEffect(() => {
-    let allItems: StoreItem[] = [...games, ...consoles, ...accessories];
+    let allItems: StoreItem[] = [];
 
-    if (category !== "All") {
-      allItems = allItems.filter(item => item.type === category);
+    if (category === "Games") {
+      allItems = rawgGames;
+    } else if (category === "Consoles") {
+      allItems = consoles;
+    } else if (category === "Accessories") {
+      allItems = accessories;
+    } else {
+      allItems = [...rawgGames, ...consoles, ...accessories];
     }
 
-    if (search.trim() !== "") {
+    if (search.trim() !== "" && category !== "Games") {
       allItems = allItems.filter(item =>
         item.name.toLowerCase().includes(search.toLowerCase())
       );
     }
 
     setItems(allItems);
-  }, [search, category, games, consoles, accessories]);
+  }, [search, category, rawgGames, consoles, accessories]);
 
   const renderItem = ({ item }: { item: StoreItem }) => (
     <View style={[styles.card, { width: cardWidth }]}>

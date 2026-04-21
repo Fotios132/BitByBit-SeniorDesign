@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useCart } from '../../context/CartContext';
-import { useAuth } from './context/AuthContext'; 
+import { useAuth } from '../../context/AuthContext'; 
 
 const DARK_BG = '#000000ff';
 const CARD_BG = '#101827';

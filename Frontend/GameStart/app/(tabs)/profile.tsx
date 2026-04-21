@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { router } from "expo-router";
-import { useAuth } from "./context/AuthContext"; // 👈 adjust path
+import { useAuth } from "../../context/AuthContext"; // 👈 adjust path
 
 const ProfileScreen = () => {
   const { user, setUser } = useAuth();

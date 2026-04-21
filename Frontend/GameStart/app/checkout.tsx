@@ -8,9 +8,12 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useAuth } from './(tabs)/context/AuthContext'; 
+import { useAuth } from '@/context/AuthContext'; 
+import { useCart } from '@/context/CartContext';
+import { submitOrder } from '@/APICalls/callOrderAPI';
 
 const DARK_BG = '#000000ff';
 const CARD_BG = '#101827';
@@ -21,8 +24,18 @@ const BORDER = '#1f2937';
 
 export default function CheckoutScreen() {
   const { user } = useAuth(); 
+  const { items, clearCart } = useCart(); // <-- ADDED clearCart
 
-  // for none users)
+  // read total from route params
+  const { total } = useLocalSearchParams<{ total?: string }>();
+
+  const numericTotal = total ? parseFloat(total) : 0;
+  const displayTotal = numericTotal.toFixed(2);
+  const [method, setMethod] = useState<'credit' | 'debit'>('credit');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // for non-authenticated users
   if (!user) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -31,31 +44,15 @@ export default function CheckoutScreen() {
             <Text style={styles.logo}>Checkout</Text>
           </View>
         </View>
-
         <View style={styles.mustSignInWrap}>
-          <Text style={styles.mustSignInText}>Must be signed in</Text>
-
-          <TouchableOpacity
-            style={styles.goSignInButton}
-            onPress={() => router.replace('/signIn')}
-          >
+          <Text style={styles.mustSignInText}>Please sign in to complete your purchase</Text>
+          <TouchableOpacity style={styles.goSignInButton} onPress={() => router.replace('/(auth)/login')}>
             <Text style={styles.goSignInText}>Go to Sign In</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
-
-  // read total from route params
-  const { total } = useLocalSearchParams<{ total?: string }>();
-
-  const numericTotal = total ? parseFloat(total) : 0;
-  const displayTotal = numericTotal.toFixed(2);
-  const [method, setMethod] = useState<'credit' | 'debit'>('credit');
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -166,9 +163,39 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.payButton}
-            onPress={() => {
-              // no-op for now
+            style={[styles.payButton, submitting && styles.disabledButton]}
+            disabled={submitting}
+            onPress={async () => {
+              console.log('Confirm Payment pressed');
+              setSubmitting(true);
+              setError(null);
+
+              const order = {
+                id: Date.now().toString(),
+                date: new Date().toLocaleString(),
+                total: displayTotal,
+                items: items.map(i => ({ name: i.name, qty: i.quantity, price: i.price })),
+              };
+
+              console.log('Order:', order);
+              console.log('User email:', user.email);
+
+              try {
+                console.log('Calling submitOrder...');
+                await submitOrder(user.email, order);
+                console.log('submitOrder success');
+                // Clear cart
+                clearCart();
+                Alert.alert("Success", "Payment confirmed and email sent.");
+                router.replace("/(tabs)/orders");
+              } catch (err) {
+                console.log('submitOrder error:', err);
+                const message = err instanceof Error ? err.message : "Unknown error";
+                setError(message);
+                Alert.alert("Payment Failed", message);
+              } finally {
+                setSubmitting(false);
+              }
             }}
           >
             <Text style={styles.payText}>Confirm Payment</Text>
@@ -185,165 +212,145 @@ const styles = StyleSheet.create({
     backgroundColor: DARK_BG,
   },
   header: {
-    backgroundColor: '#000',
-    paddingTop: 10,
+    backgroundColor: CARD_BG,
+    paddingTop: 50,
     paddingBottom: 10,
-    alignItems: 'center',
   },
   navbar: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#111',
-    width: '95%',
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 12,
   },
   logo: {
-    color: '#00ffff',
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
+    color: TEXT_PRIMARY,
+  },
+  mustSignInWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  mustSignInText: {
+    fontSize: 18,
+    color: TEXT_SECONDARY,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  goSignInButton: {
+    backgroundColor: ACCENT,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  goSignInText: {
+    color: DARK_BG,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  backButton: {
+    backgroundColor: BORDER,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  backText: {
+    color: TEXT_PRIMARY,
+    fontSize: 16,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   container: {
     flex: 1,
-    backgroundColor: DARK_BG,
     paddingHorizontal: 20,
   },
   section: {
     marginTop: 20,
   },
   sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: TEXT_PRIMARY,
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   summaryBox: {
     backgroundColor: CARD_BG,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: BORDER,
+    borderRadius: 8,
+    padding: 15,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   summaryTotalLabel: {
-    color: TEXT_PRIMARY,
     fontSize: 16,
-    fontWeight: '700',
+    color: TEXT_SECONDARY,
   },
   summaryTotalPrice: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: ACCENT,
-    fontSize: 16,
-    fontWeight: '700',
   },
   methodRow: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-around',
   },
   methodButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: BORDER,
-    alignItems: 'center',
-    backgroundColor: '#020617',
+    backgroundColor: BORDER,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
   methodButtonActive: {
-    borderColor: ACCENT,
-    backgroundColor: '#022c37',
+    backgroundColor: ACCENT,
   },
   methodText: {
     color: TEXT_SECONDARY,
-    fontWeight: '600',
+    fontSize: 16,
   },
   methodTextActive: {
-    color: ACCENT,
+    color: DARK_BG,
+    fontWeight: 'bold',
   },
   cardBox: {
     backgroundColor: CARD_BG,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: BORDER,
-    marginTop: 4,
+    borderRadius: 8,
+    padding: 15,
   },
   input: {
-    backgroundColor: '#020617',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    backgroundColor: BORDER,
     color: TEXT_PRIMARY,
-    borderWidth: 1,
-    borderColor: BORDER,
+    padding: 12,
+    borderRadius: 8,
     marginBottom: 10,
+    fontSize: 16,
   },
   row: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-between',
   },
   inputHalf: {
     flex: 1,
+    marginHorizontal: 5,
   },
   buttonRow: {
-    marginTop: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
-  },
-  backButton: {
-    flex: 1,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: TEXT_SECONDARY,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  backText: {
-    color: TEXT_SECONDARY,
-    fontWeight: '600',
+    marginTop: 30,
   },
   payButton: {
-    flex: 1,
-    borderRadius: 10,
     backgroundColor: ACCENT,
-    paddingVertical: 12,
-    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 8,
   },
   payText: {
     color: DARK_BG,
-    fontWeight: '700',
     fontSize: 16,
-  },
-
-  // Block screen for CE14
-  mustSignInWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  mustSignInText: {
-    color: '#f97373',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  goSignInButton: {
-    width: '100%',
-    borderRadius: 10,
-    backgroundColor: ACCENT,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  goSignInText: {
-    color: DARK_BG,
-    fontWeight: '700',
-    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
